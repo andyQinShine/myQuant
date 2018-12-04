@@ -18,7 +18,6 @@ from threading import Thread
 from time import sleep
 
 import requests
-
 from websocket import _exceptions, create_connection
 
 # 常量定义
@@ -222,7 +221,7 @@ class TradeApi(object):
             try:
                 req = self.queue.get(timeout=1)
                 self.processReq(req)
-            except Empty:
+            except Queue.Empty:
                 pass
     
     #----------------------------------------------------------------------
@@ -251,8 +250,73 @@ class TradeApi(object):
         func = self.apiGet
         callback = self.onGetCurrencys
         
-        return self.addReq(path, params, func, callback)   
-    
+        return self.addReq(path, params, func, callback)
+
+    # ----------------------------------------------------------------------
+    # 获取KLine
+    def getKline(self, symbol, period, size=150):
+        """
+        :param symbol
+        :param period: 可选值：{1min, 5min, 15min, 30min, 60min, 1day, 1mon, 1week, 1year }
+        :param size: 可选值： [1,2000]
+        :return:
+        """
+        params = {'symbol': symbol,
+                  'period': period,
+                  'size': size}
+        path = '/market/history/kline'
+        func = self.apiGet
+
+        success, data =  self.addReq(path, params, func, self.onGetKLine)
+        return data
+
+
+    def onGetKLine(self, data, reqid):
+        print(reqid, data)
+
+    # 得到交易对的价格和数量精度
+    def get_symbol_precision(self,base, quote):
+        precision = self.get_symbols()
+        precision = precision['data']
+        price = 0
+        amount = 0
+        for item in precision:
+            if item['base-currency'] == base and item['quote-currency'] == quote:
+                result = item
+                price = item['price-precision']
+                amount = item['amount-precision']
+                break
+        return price,amount
+
+    # 获取  支持的交易对
+    def get_symbols(self, long_polling=None):
+        """
+        """
+        params = {}
+        if long_polling:
+            params['long-polling'] = long_polling
+        path = '/v1/common/symbols'
+        func = self.apiGet
+
+        success, data =  self.addReq(path, params, func, self.onGetKLine)
+        if success:
+            return data
+        else:
+            return None
+
+    # ----------------------------------------------------------------------
+    # 获取merged 获取聚合行情(Ticker)
+    def getMerged(self, symbol):
+        params = {
+            'symbol': symbol
+        }
+        path = '/market/detail/merged'
+        func = self.apiGet
+
+        return self.addReq(path, params, func, self.onGetMerged)
+
+    def onGetMerged(self, data, reqid):
+        print(reqid, data)
     #----------------------------------------------------------------------
     def getTimestamp(self):
         """查询系统时间"""

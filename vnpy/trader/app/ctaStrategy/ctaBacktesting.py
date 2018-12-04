@@ -16,6 +16,8 @@ import copy
 import pymongo
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+import time
 
 from vnpy.rpc import RpcClient, RpcServer, RemoteException
 
@@ -99,6 +101,9 @@ class BacktestingEngine(object):
         
         # 日线回测结果计算用
         self.dailyResultDict = OrderedDict()
+
+        # 交易API
+        self.tradeAPI = None
     
     #------------------------------------------------
     # 通用功能
@@ -246,7 +251,38 @@ class BacktestingEngine(object):
         else:
             count = initCursor.count() + self.dbCursor.count()
         self.output(u'载入完成，数据量：%s' %count)
-        
+
+    def getOnLineKine(self, frequency='1day',size=100):
+        response = self.tradeAPI.getKline(self.symbol,frequency, size)
+        if response != None:
+            data = response['data']
+            return self.parseDataToBar(data)
+
+    def parseDataToBar(self, data):
+        dataArrays = []
+        # 将json数据转换为DataFrame
+        pdDataFrame = pd.DataFrame(data)
+        # 按照时间升序排列
+        pdDataFrame = pdDataFrame.sort_values(by=['id'])
+        for index, row in pdDataFrame.iterrows():
+            bar = VtBarData()
+            bar.symbol = self.symbol
+            bar.open = float(row['open'])
+            bar.close = float(row['close'])
+            bar.high = float(row['high'])
+            bar.low = float(row['low'])
+            bar.volume = float(row['vol'])
+            timestemp = time.localtime(int(row['id']))
+
+            date = time.strftime("%Y%m%d %H:%M:%S", timestemp)
+            date_time = datetime.strptime(date, "%Y%m%d %H:%M:%S")
+
+            bar.date = date_time.strftime('%Y%m%d')
+            bar.time = date_time.strftime('%H:%M:%S')
+            bar.datetime = datetime.strptime(bar.date + ' ' + bar.time, '%Y%m%d %H:%M:%S')
+
+            dataArrays.append(bar)
+        return dataArrays
     #----------------------------------------------------------------------
     def runBacktesting(self):
         """运行回测"""
@@ -743,7 +779,7 @@ class BacktestingEngine(object):
             return {}
         
         # 然后基于每笔交易的结果，我们可以计算具体的盈亏曲线和最大回撤等        
-        capital = 0             # 资金
+        capital = 0.02             # 资金
         maxCapital = 0          # 资金最高净值
         drawdown = 0            # 回撤
         
@@ -831,17 +867,17 @@ class BacktestingEngine(object):
         self.output(u'第一笔交易：\t%s' % d['timeList'][0])
         self.output(u'最后一笔交易：\t%s' % d['timeList'][-1])
         
-        self.output(u'总交易次数：\t%s' % formatNumber(d['totalResult']))        
-        self.output(u'总盈亏：\t%s' % formatNumber(d['capital']))
-        self.output(u'最大回撤: \t%s' % formatNumber(min(d['drawdownList'])))                
+        self.output(u'总交易次数：\t%s' % formatNumber(d['totalResult']))
+        self.output(u'总盈亏：\t%s' % formatNumber(d['capital'],8))
+        self.output(u'最大回撤: \t%s' % formatNumber(min(d['drawdownList']),8))
         
-        self.output(u'平均每笔盈利：\t%s' %formatNumber(d['capital']/d['totalResult']))
-        self.output(u'平均每笔滑点：\t%s' %formatNumber(d['totalSlippage']/d['totalResult']))
-        self.output(u'平均每笔佣金：\t%s' %formatNumber(d['totalCommission']/d['totalResult']))
+        self.output(u'平均每笔盈利：\t%s' %formatNumber(d['capital']/d['totalResult'],8))
+        self.output(u'平均每笔滑点：\t%s' %formatNumber(d['totalSlippage']/d['totalResult'],8))
+        self.output(u'平均每笔佣金：\t%s' %formatNumber(d['totalCommission']/d['totalResult'],8))
         
         self.output(u'胜率\t\t%s%%' %formatNumber(d['winningRate']))
-        self.output(u'盈利交易平均值\t%s' %formatNumber(d['averageWinning']))
-        self.output(u'亏损交易平均值\t%s' %formatNumber(d['averageLosing']))
+        self.output(u'盈利交易平均值\t%s' %formatNumber(d['averageWinning'],8))
+        self.output(u'亏损交易平均值\t%s' %formatNumber(d['averageLosing'],8))
         self.output(u'盈亏比：\t%s' %formatNumber(d['profitLossRatio']))
     
         # 绘图
@@ -1364,9 +1400,9 @@ def runHistoryDataServer():
 
 
 #----------------------------------------------------------------------
-def formatNumber(n):
+def formatNumber(n, precision=2):
     """格式化数字到字符串"""
-    rn = round(n, 2)        # 保留两位小数
+    rn = round(n, precision)        # 保留两位小数
     return format(rn, ',')  # 加上千分符
     
 

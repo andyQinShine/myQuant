@@ -217,7 +217,7 @@ class EventEngine2(object):
             try:
                 event = self.__queue.get(block = True, timeout = 1)  # 获取事件的阻塞时间设为1秒
                 self.__process(event)
-            except Empty:
+            except Queue.Empty:
                 pass
             
     #----------------------------------------------------------------------
