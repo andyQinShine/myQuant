@@ -12,10 +12,9 @@ import hashlib
 import hmac
 import json
 import urllib
-import urllib.request
 import requests
 
-from Keys import *
+from vnpy.api.huobi.Keys import *
 
 
 #'Timestamp': '2017-06-02T06:13:49'
@@ -27,12 +26,14 @@ def http_get_request(url, params, add_to_headers=None):
     }
     if add_to_headers:
         headers.update(add_to_headers)
-    postdata = urllib.parse.urlencode(params)
+    postdata = urllib.urlencode(params)
     response = requests.get(url, postdata, headers=headers, timeout=5)
     try:
         
         if response.status_code == 200:
-            return response.json()
+            data = response.json()
+            print (data)
+            return data
         else:
             print(response.status_code)
             return
@@ -70,8 +71,9 @@ def api_key_get(params, request_path):
                    'Timestamp': timestamp})
 
     host_url = TRADE_URL
-    host_name = urllib.parse.urlparse(host_url).hostname
-    host_name = host_name.lower()
+    # host_name = urllib.urlparse(host_url).hostname
+
+    host_name = "api.huobi.pro"
     params['Signature'] = createSign(params, method, host_name, request_path, SECRET_KEY)
 
     url = host_url + request_path
@@ -96,7 +98,7 @@ def api_key_post(params, request_path):
 
 def createSign(pParams, method, host_url, request_path, secret_key):
     sorted_params = sorted(pParams.items(), key=lambda d: d[0], reverse=False)
-    encode_params = urllib.parse.urlencode(sorted_params)
+    encode_params = urllib.urlencode(sorted_params)
     payload = [method, host_url, request_path, encode_params]
     payload = '\n'.join(payload)
     payload = payload.encode(encoding='UTF8')

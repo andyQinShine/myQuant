@@ -28,6 +28,9 @@ class KkStrategy(CtaTemplate):
     trailingPrcnt = 0.8     # 移动止损
     initDays = 10           # 初始化数据所用的天数
     fixedSize = 1           # 每次交易的数量
+    barXmin = 5             # 合并bar的粒度
+    initDataSize = 100      # 策略启动需要的历史数据size
+
 
     # 策略变量
     kkUp = 0                            # KK通道上轨
@@ -45,7 +48,9 @@ class KkStrategy(CtaTemplate):
                  'author',
                  'vtSymbol',
                  'kkLength',
-                 'kkDev']    
+                 'kkDev',
+                 'barXmin',
+                 'initDataSize']
 
     # 变量列表，保存了变量的名称
     varList = ['inited',
@@ -64,8 +69,8 @@ class KkStrategy(CtaTemplate):
         """Constructor"""
         super(KkStrategy, self).__init__(ctaEngine, setting)
         
-        self.bg = BarGenerator(self.onBar, 5, self.onFiveBar)     # 创建K线合成器对象
-        self.am = ArrayManager()
+        self.bg = BarGenerator(self.onBar, self.barXmin, self.onFiveBar)     # 创建K线合成器对象
+        self.am = ArrayManager(size=self.initDataSize)
         
         self.buyOrderIDList = []
         self.shortOrderIDList = []
@@ -75,12 +80,17 @@ class KkStrategy(CtaTemplate):
     def onInit(self):
         """初始化策略（必须由用户继承实现）"""
         self.writeCtaLog(u'%s策略初始化' %self.name)
-        
-        # 载入历史数据，并采用回放计算的方式初始化策略数值
-        initData = self.loadBar(self.initDays)
+
+        """"有交易的API，则调用API去获取历史数据"""
+        if self.ctaEngine.tradeAPI != None:
+            """"默认获取粒度是1min, size 大小是 bar 的粒度* 初始化所需要的数据大小"""
+            initData = self.ctaEngine.getOnLineKine(size=self.barXmin * self.initDataSize)
+        else:
+            # 载入历史数据，并采用回放计算的方式初始化策略数值
+            initData = self.loadBar(self.initDays)
+
         for bar in initData:
             self.onBar(bar)
-
         self.putEvent()
 
     #----------------------------------------------------------------------
@@ -121,6 +131,7 @@ class KkStrategy(CtaTemplate):
         
         # 计算指标数值
         self.kkUp, self.kkDown = am.keltner(self.kkLength, self.kkDev)
+        print ("============", self.kkUp, self.kkDown)
         
         # 判断是否要进行交易
     
@@ -192,7 +203,8 @@ class KkStrategy(CtaTemplate):
         # 发送双边的停止单委托，并记录委托号
         self.buyOrderIDList = self.buy(buyPrice, volume, True)
         self.shortOrderIDList = self.short(shortPrice, volume, True)
-        
+
+        print (self.buyOrderIDList, self.shortOrderIDList)
         # 将委托号记录到列表中
         self.orderList.extend(self.buyOrderIDList)
         self.orderList.extend(self.shortOrderIDList)

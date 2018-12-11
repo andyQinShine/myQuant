@@ -267,7 +267,7 @@ class TradeApi(object):
         path = '/market/history/kline'
         func = self.apiGet
 
-        success, data =  self.addReq(path, params, func, self.onGetKLine)
+        success, data = self.addReq(path, params, func, self.onGetKLine)
         return data
 
 
@@ -298,7 +298,7 @@ class TradeApi(object):
         path = '/v1/common/symbols'
         func = self.apiGet
 
-        success, data =  self.addReq(path, params, func, self.onGetKLine)
+        success, data = self.addReq(path, params, func, self.onGetKLine)
         if success:
             return data
         else:

@@ -6,7 +6,8 @@
 #import time
 
 from __future__ import absolute_import
-from .vnhuobi import DataApi
+# from .vnhuobi import DataApi
+from vnpy.api.huobi.vnhuobi import DataApi
 
 #if __name__ == '__main__':
     #while(1):

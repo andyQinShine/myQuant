@@ -12,7 +12,7 @@ if __name__ == '__main__':
 
     # 获取交易对的价格精度和最小交易数量
     pricePrecision, amountPrecision = huobiApi.get_symbol_precision(base,quote)
-    priceTicker = 1.0 / pow(10,pricePrecision)
+    priceTicker = 1.0 / pow(10, pricePrecision)
     amountTicker = 1.0 / pow(10, amountPrecision)
 
     engine = BacktestingEngine()
@@ -24,14 +24,16 @@ if __name__ == '__main__':
     engine.tradeAPI = huobiApi
     engine.symbol = symbol
 
-    data = engine.getOnLineKine(frequency='1min', size=1)
-    print(data)
 
 
-    engine.setDatabase('huobi', 'eosbtc_60min')
-
+    # 在引擎中创建策略对象
     d = {}
     engine.initStrategy(KkStrategy, d)
+
+    # 开始跑回测
+    engine.runOnlinBacktesting()
+
+    # engine.showBacktestingResult()
 
     # print("priceTicker:",1.0 / pow(10,pricePrecision))
     # print("amountTicker:", 1.0 / pow(10, amountPrecision))

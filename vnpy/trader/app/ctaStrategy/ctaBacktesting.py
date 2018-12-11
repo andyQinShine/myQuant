@@ -18,6 +18,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import time
+from apscheduler.schedulers.blocking import BlockingScheduler
+from datetime import datetime
 
 from vnpy.rpc import RpcClient, RpcServer, RemoteException
 
@@ -252,8 +254,8 @@ class BacktestingEngine(object):
             count = initCursor.count() + self.dbCursor.count()
         self.output(u'载入完成，数据量：%s' %count)
 
-    def getOnLineKine(self, frequency='1day',size=100):
-        response = self.tradeAPI.getKline(self.symbol,frequency, size)
+    def getOnLineKine(self, frequency='1min', size=500):
+        response = self.tradeAPI.getKline(self.symbol, frequency, size)
         if response != None:
             data = response['data']
             return self.parseDataToBar(data)
@@ -315,12 +317,60 @@ class BacktestingEngine(object):
             func(data)     
             
         self.output(u'数据回放结束')
-        
+
+    def runOnlinBacktesting(self):
+        """运行回测"""
+        self.output(u'开始回测')
+
+        self.strategy.onInit()
+        self.strategy.inited = True
+        self.output(u'策略初始化完成')
+
+        self.strategy.trading = True
+        self.strategy.onStart()
+        self.output(u'策略启动完成')
+
+        self.output(u'开始回放数据')
+
+        # for d in self.dbCursor:
+        #     data = dataClass()
+        #     data.__dict__ = d
+        #     func(data)
+
+        schdule = BlockingScheduler()
+        schdule.add_job(self.onlinBackJob, 'cron', minute='*/1')
+        schdule.start()
+
+        self.output(u'数据回放结束')
+
+    def onlinBackJob(self):
+
+        # 首先根据回测模式，确认要使用的数据类
+        if self.mode == self.BAR_MODE:
+            dataClass = VtBarData
+            func = self.newBar
+        else:
+            dataClass = VtTickData
+            func = self.newTick
+
+        onLineData = self.getOnLineKine(size=1)
+        for d in onLineData:
+            print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            # data = dataClass()
+            # data.__dict__ = d
+            func(d)
+
+        # 显示result
+        result = self.calculateBacktestingResult()
+        print(result.__dict__)
+        # self.showBacktestingResult()
+
     #----------------------------------------------------------------------
     def newBar(self, bar):
         """新的K线"""
         self.bar = bar
         self.dt = bar.datetime
+
         
         self.crossLimitOrder()      # 先撮合限价单
         self.crossStopOrder()       # 再撮合停止单

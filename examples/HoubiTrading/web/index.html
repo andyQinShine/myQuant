@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Flask-SocketIO Test</title>
+	<script src="https://cdn.staticfile.org/vue/2.4.2/vue.min.js"></script>
+	<script src="https://cdn.bootcss.com/socket.io/1.5.1/socket.io.min.js"></script>
+</head>
+<body>
+	<h2>WebSocket</h2>
+	<div id="socket">
+		<ul>
+			<form @submit.prevent='submit'>
+				<input type="text" name="emit_data" v-model="inputtext.name" placeholder="Message">
+				<input type="password" name="emit_password" v-model="inputtext.pwd">
+				<input type="submit" value="提交">
+			</form>
+		</ul>
+		<div v-model='log'></div>
+	</div>
+	<script>
+		var socket = io.connect();
+		socket.on('connect', function() {
+            socket.emit('connect_event', {data: 'connected!'});
+        })
+		socket.on('server_response', function(msg) {
+			debugger;
+            socketVm.log = msg
+        });
+		var socketVm = new Vue({
+			el : '#socket',
+			data : {
+				inputtext:{},
+				log: ''
+			},
+			methods : {
+				submit : function(){
+					debugger;
+					socket.emit('client_event',{data: this.inputtext})
+				}
+			}
+		})
+	</script>
+
+	
+</body>
+</html>

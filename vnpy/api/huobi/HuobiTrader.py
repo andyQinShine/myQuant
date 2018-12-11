@@ -23,7 +23,7 @@ class HoubiTrader(object):
         return self.api
 
 
-# if __name__ == '__main__':
-#     api = HoubiTrader().getApi()
-#     price, amount = api.get_symbol_precision('eos', 'btc')
-#     print("price precision is %d, amount precision is %d",price ,amount)
+if __name__ == '__main__':
+    api = HoubiTrader().getApi()
+    price, amount = api.get_symbol_precision('eos', 'btc')
+    print("price precision is %d, amount precision is %d",price ,amount)
