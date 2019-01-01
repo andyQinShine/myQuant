@@ -28,7 +28,7 @@ class KkStrategy(CtaTemplate):
     trailingPrcnt = 0.8     # 移动止损
     initDays = 10           # 初始化数据所用的天数
     fixedSize = 1           # 每次交易的数量
-    barXmin = 5             # 合并bar的粒度
+    barXmin = 2             # 合并bar的粒度
     initDataSize = 100      # 策略启动需要的历史数据size
 
 
@@ -114,13 +114,18 @@ class KkStrategy(CtaTemplate):
     def onBar(self, bar):
         """收到Bar推送（必须由用户继承实现）"""
         self.bg.updateBar(bar)
-    
+        # self.ctaEngine.addCtaLog(bar.__dict__)
+
+
     #----------------------------------------------------------------------
     def onFiveBar(self, bar):
         """收到5分钟K线"""
         # 撤销之前发出的尚未成交的委托（包括限价单和停止单）
         for orderID in self.orderList:
             self.cancelOrder(orderID)
+            '''记录日志'''
+            content = u'撤销所有为成交的订单，订单ID是：' + orderID
+            self.ctaEngine.addCtaLog(content)
         self.orderList = []
     
         # 保存K线数据
@@ -131,7 +136,6 @@ class KkStrategy(CtaTemplate):
         
         # 计算指标数值
         self.kkUp, self.kkDown = am.keltner(self.kkLength, self.kkDev)
-        print ("============", self.kkUp, self.kkDown)
         
         # 判断是否要进行交易
     
@@ -201,6 +205,8 @@ class KkStrategy(CtaTemplate):
         3. 一个方向的停止单成交后会立即撤消另一个方向的
         """
         # 发送双边的停止单委托，并记录委托号
+        if not self.trading:
+            return
         self.buyOrderIDList = self.buy(buyPrice, volume, True)
         self.shortOrderIDList = self.short(shortPrice, volume, True)
 
@@ -212,4 +218,7 @@ class KkStrategy(CtaTemplate):
     #----------------------------------------------------------------------
     def onStopOrder(self, so):
         """停止单推送"""
+        # content = u'已经生成本地停止单, 本地对象是：' + so.__dict__
+        # self.ctaEngine.addCtaLog(content)
         pass
+

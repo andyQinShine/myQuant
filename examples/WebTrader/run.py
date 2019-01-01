@@ -16,8 +16,8 @@ from tradingServer import main as runTradingServer
 from vnpy.trader.vtEngine import LogEngine
 
 
-START_TIME = time(20, 45)
-CLOSE_TIME = time(15, 30)
+START_TIME = time(01, 45)
+CLOSE_TIME = time(23, 30)
 
 
 if __name__ == '__main__':

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -5,37 +6,46 @@
 	<title>Flask-SocketIO Test</title>
 	<script src="https://cdn.staticfile.org/vue/2.4.2/vue.min.js"></script>
 	<script src="https://cdn.bootcss.com/socket.io/1.5.1/socket.io.min.js"></script>
+
+	<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
 </head>
 <body>
 	<h2>WebSocket</h2>
-	<div id="socket">
-		<ul>
-			<form @submit.prevent='submit'>
-				<input type="text" name="emit_data" v-model="inputtext.name" placeholder="Message">
-				<input type="password" name="emit_password" v-model="inputtext.pwd">
-				<input type="submit" value="提交">
-			</form>
-		</ul>
-		<div v-model='log'></div>
+	<div id="app">
+
+		<!--logs table-->
+		<template>
+			<el-table :data="logs" border style="width: 100%" height="250">
+			<el-table-column prop="time" label="日期" width="250">
+			</el-table-column>
+			<el-table-column prop="msg" label="信息">
+			</el-table-column>
+			</el-table>
+		</template>
+  		
+
 	</div>
 	<script>
-		var socket = io.connect();
-		socket.on('connect', function() {
-            socket.emit('connect_event', {data: 'connected!'});
+		const namespace = '/test';
+		var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+		socket.on('logger', function(msg) {
+			App.logs.splice(0, 0,JSON.parse(msg.data));  
         })
-		socket.on('server_response', function(msg) {
-			debugger;
-            socketVm.log = msg
-        });
-		var socketVm = new Vue({
-			el : '#socket',
+
+		var App = new Vue({
+			el : '#app',
 			data : {
 				inputtext:{},
-				log: ''
+				logs: []
+			},
+			computed:{
+				outputlog: function(){
+					return this.logs.join('</br>')
+				}
 			},
 			methods : {
 				submit : function(){
-					debugger;
 					socket.emit('client_event',{data: this.inputtext})
 				}
 			}

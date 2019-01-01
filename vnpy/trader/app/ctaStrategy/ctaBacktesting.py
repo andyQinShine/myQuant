@@ -22,6 +22,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from datetime import datetime
 
 from vnpy.rpc import RpcClient, RpcServer, RemoteException
+import Queue
 
 
 # 如果安装了seaborn则设置为白色风格
@@ -95,6 +96,7 @@ class BacktestingEngine(object):
         self.tradeDict = OrderedDict()  # 成交字典
         
         self.logList = []               # 日志记录
+        self.logQueue = Queue.Queue()
         
         # 当前最新数据，用于模拟成交用
         self.tick = None
@@ -321,16 +323,20 @@ class BacktestingEngine(object):
     def runOnlinBacktesting(self):
         """运行回测"""
         self.output(u'开始回测')
+        self.addCtaLog(u'开始回测')
 
         self.strategy.onInit()
         self.strategy.inited = True
         self.output(u'策略初始化完成')
+        self.addCtaLog(u'策略初始化完成')
 
         self.strategy.trading = True
         self.strategy.onStart()
         self.output(u'策略启动完成')
+        self.addCtaLog(u'策略启动完成')
 
         self.output(u'开始回放数据')
+        self.addCtaLog(u'开始回放数据')
 
         # for d in self.dbCursor:
         #     data = dataClass()
@@ -342,6 +348,7 @@ class BacktestingEngine(object):
         schdule.start()
 
         self.output(u'数据回放结束')
+        self.addCtaLog(u'数据回放结束')
 
     def onlinBackJob(self):
 
@@ -354,15 +361,13 @@ class BacktestingEngine(object):
             func = self.newTick
 
         onLineData = self.getOnLineKine(size=1)
-        for d in onLineData:
-            print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-            # data = dataClass()
-            # data.__dict__ = d
-            func(d)
+        for bar in onLineData:
+            func(bar)
 
         # 显示result
         result = self.calculateBacktestingResult()
-        print(result.__dict__)
+        self.addCtaLog("显示result, " + str(result))
+        self.output("显示result, " + str(result))
         # self.showBacktestingResult()
 
     #----------------------------------------------------------------------
@@ -371,7 +376,6 @@ class BacktestingEngine(object):
         self.bar = bar
         self.dt = bar.datetime
 
-        
         self.crossLimitOrder()      # 先撮合限价单
         self.crossStopOrder()       # 再撮合停止单
         self.strategy.onBar(bar)    # 推送K线到策略中
@@ -422,12 +426,12 @@ class BacktestingEngine(object):
                 self.strategy.onOrder(order)
 
             # 判断是否会成交
-            buyCross = (order.direction==DIRECTION_LONG and 
-                        order.price>=buyCrossPrice and
+            buyCross = (order.direction == DIRECTION_LONG and
+                        order.price >= buyCrossPrice and
                         buyCrossPrice > 0)      # 国内的tick行情在涨停时askPrice1为0，此时买无法成交
             
-            sellCross = (order.direction==DIRECTION_SHORT and 
-                         order.price<=sellCrossPrice and
+            sellCross = (order.direction == DIRECTION_SHORT and
+                         order.price <= sellCrossPrice and
                          sellCrossPrice > 0)    # 国内的tick行情在跌停时bidPrice1为0，此时卖无法成交
             
             # 如果发生了成交
@@ -487,10 +491,18 @@ class BacktestingEngine(object):
         # 遍历停止单字典中的所有停止单
         for stopOrderID, so in list(self.workingStopOrderDict.items()):
             # 判断是否会成交
-            buyCross = so.direction==DIRECTION_LONG and so.price<=buyCrossPrice
-            sellCross = so.direction==DIRECTION_SHORT and so.price>=sellCrossPrice
-            
-            # 如果发生了成交
+            # 订单的买入价格<= bar的最高价
+            buyCross = so.direction == DIRECTION_LONG and so.price <= buyCrossPrice
+            # 订单的卖出价格 >= bar的最低价
+            sellCross = so.direction == DIRECTION_SHORT and so.price >= sellCrossPrice
+
+            '''记录日志，输出前台'''
+            content = stopOrderID + u'-----buyCrossPrice: ' + str(buyCrossPrice) + ',sellCrossPrice' + str(sellCrossPrice) + ',bestCrossPrice:' + str(bestCrossPrice)
+            content += "<br/>buyCross:" + str(buyCross) + "---sellCross:" + str(sellCross) + u':so.direction' + so.direction
+
+            self.addCtaLog(content)
+
+        # 如果发生了成交
             if buyCross or sellCross:
                 # 更新停止单状态，并从字典中删除该停止单
                 so.status = STOPORDER_TRIGGERED
@@ -667,7 +679,12 @@ class BacktestingEngine(object):
         """记录日志"""
         log = str(self.dt) + ' ' + content 
         self.logList.append(log)
-    
+
+    #---------------------------------------------------------------------
+    def addCtaLog(self, content):
+        """按照时间记录日志"""
+        time = str(datetime.now())
+        self.logQueue.put({'time': time, 'msg': content})
     #----------------------------------------------------------------------
     def cancelAll(self, name):
         """全部撤单"""

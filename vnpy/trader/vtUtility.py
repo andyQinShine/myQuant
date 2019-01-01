@@ -106,7 +106,7 @@ class BarGenerator(object):
             
         # X分钟已经走完
         # if not (bar.datetime.minute + 1) % self.xmin:   # 可以用X整除
-        if self.xminBar.xmin == self.xmin - 1:
+        if self.xminBar.xmin == self.xmin:
             # 生成上一X分钟K线的时间戳
             self.xminBar.datetime = self.xminBar.datetime.replace(second=0, microsecond=0)  # 将秒和微秒设为0
             self.xminBar.date = self.xminBar.datetime.strftime('%Y%m%d')
