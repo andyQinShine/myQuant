@@ -4,7 +4,8 @@ from __future__ import print_function
 from __future__ import absolute_import
 from time import sleep
 
-from .vnrpc import RpcClient
+# from .vnrpc import RpcClient
+from vnrpc import RpcClient
 
 
 ########################################################################

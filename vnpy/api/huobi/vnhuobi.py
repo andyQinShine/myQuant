@@ -436,7 +436,8 @@ class TradeApi(object):
     def placeOrder(self, accountid, amount, symbol, type_, price=None, source=None):
         """下单"""
         if self.hostname == HUOBI_API_HOST:
-            path = '/v1/order/orders/place'
+            # path = '/v1/order/orders/place'
+            path = '/v1/order/orders/place111'
         else:
             path = '/v1/hadax/order/orders/place'
         
@@ -617,7 +618,7 @@ class DataApi(object):
         self.url = url
         
         try:
-            self.ws = create_connection(self.url, sslopt={'cert_reqs': ssl.CERT_NONE})
+            self.ws = create_connection(self.url, http_proxy_host = "127.0.0.1",http_proxy_port =1080 )
             self.active = True
             self.thread.start()
             

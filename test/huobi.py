@@ -9,9 +9,9 @@ import time
 if __name__ == '__main__':
     while (1):
         try:
-            # ws = create_connection("wss://api.huobi.pro/ws",http_proxy_host = "47.52.91.87",http_proxy_port =443 )
-            ws = websocket.WebSocket()
-            ws.connect("wss://api.huobi.pro/ws", http_proxy_host="47.52.91.87", http_proxy_port=443)
+            ws = create_connection("wss://api.huobi.pro/ws",http_proxy_host = "127.0.0.1",http_proxy_port =1080 )
+            # ws = websocket.WebSocket()
+            # ws.connect("wss://api.huobi.pro/ws", http_proxy_host="127.0.0.1", http_proxy_port=1080)
         except Exception, e:
             print(str(Exception))
             print(str(e))
@@ -19,7 +19,7 @@ if __name__ == '__main__':
             time.sleep(5)
 
     # 订阅 KLine 数据
-    # tradeStr="""{"sub": "market.htusdt.kline.1min","id": "id10"}"""
+    tradeStr="""{"sub": "market.htusdt.kline.1min","id": "id10"}"""
 
     # 请求 KLine 数据
     # tradeStr="""{"req": "market.ethusdt.kline.1min","id": "id10", "from": 1513391453, "to": 1513392453}"""
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     # tradeStr="""{"req": "market.ethusdt.depth.step5", "id": "id10"}"""
 
     # 订阅 Trade Detail 数据
-    tradeStr = """{"sub": "market.btcusdt.trade.detail", "id": "id10"}"""
+    tradeStr = {"sub": "market.btcusdt.trade.detail", "id": "id10"}
 
     # 请求 Trade Detail 数据
     # tradeStr="""{"req": "market.ethusdt.trade.detail", "id": "id10"}"""

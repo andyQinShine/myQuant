@@ -82,13 +82,14 @@ class KkStrategy(CtaTemplate):
         self.writeCtaLog(u'%s策略初始化' %self.name)
 
         """"有交易的API，则调用API去获取历史数据"""
-        if self.ctaEngine.tradeAPI != None:
-            """"默认获取粒度是1min, size 大小是 bar 的粒度* 初始化所需要的数据大小"""
-            initData = self.ctaEngine.getOnLineKine(size=self.barXmin * self.initDataSize)
-        else:
-            # 载入历史数据，并采用回放计算的方式初始化策略数值
-            initData = self.loadBar(self.initDays)
+        # if self.ctaEngine.tradeAPI != None:
+        #     """"默认获取粒度是1min, size 大小是 bar 的粒度* 初始化所需要的数据大小"""
+        #     initData = self.ctaEngine.getOnLineKine(size=self.barXmin * self.initDataSize)
+        # else:
+        #     # 载入历史数据，并采用回放计算的方式初始化策略数值
+        #     initData = self.loadBar(self.initDays)
 
+        initData = self.loadBar(self.initDays)
         for bar in initData:
             self.onBar(bar)
         self.putEvent()

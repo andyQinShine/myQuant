@@ -915,7 +915,7 @@ new Vue({
             const that = this;
             axios.post(host + '/gateway', {
                     token: this.config.token,
-                    gatewayName: 'CTP'
+                    gatewayName: 'HUOBI'
                 })
                 .then(function(res) {
                     that.config.gateway = true;

@@ -11,7 +11,7 @@ from collections import defaultdict
 from qtpy.QtCore import QTimer
 
 # 自己开发的模块
-from .eventType import *
+from eventType import *
 
 
 ########################################################################
@@ -217,7 +217,7 @@ class EventEngine2(object):
             try:
                 event = self.__queue.get(block = True, timeout = 1)  # 获取事件的阻塞时间设为1秒
                 self.__process(event)
-            except Queue.Empty:
+            except Empty:
                 pass
             
     #----------------------------------------------------------------------
@@ -349,7 +349,7 @@ def test():
     ee.registerGeneralHandler(simpletest)
     ee.start()
     
-    app.exec_()
+    # app.exec_()
     
     
 # 直接运行脚本可以进行测试

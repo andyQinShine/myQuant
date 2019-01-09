@@ -54,8 +54,8 @@ from vnpy.api.huobi.vnhuobi import DataApi
 
 
 api = DataApi()
-api.connect("wss://api.huobipro.com/ws")
-api.subscribeMarketDepth('ethusdt')
+api.connect("wss://api.huobi.pro/ws")
+api.subscribeMarketDetail('eosbtc')
 #api.subscribeTradeDetail('ethusdt')
 #api.subscribeMarketDetail('ethusdt')
 input()
