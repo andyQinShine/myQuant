@@ -3,6 +3,6 @@
     {
         "name": "king keltner",
         "className": "KkStrategy",
-        "vtSymbol": "eosbtc"
+        "vtSymbol": "eosbtc.HUOBI"
     }
 ]

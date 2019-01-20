@@ -44,6 +44,9 @@ class MainEngine(object):
         # 接口实例
         self.gatewayDict = OrderedDict()
         self.gatewayDetailList = []
+
+        # default gateway (added on 2019/1/20)
+        self.defaultGateWay = None
         
         # 应用模块实例
         self.appDict = OrderedDict()
@@ -62,8 +65,9 @@ class MainEngine(object):
         gatewayName = gatewayModule.gatewayName
         
         # 创建接口实例
-        self.gatewayDict[gatewayName] = gatewayModule.gatewayClass(self.eventEngine, 
-                                                                   gatewayName)
+        gateWayClass = gatewayModule.gatewayClass(self.eventEngine,gatewayName)
+        self.defaultGateWay = gateWayClass
+        self.gatewayDict[gatewayName] = gateWayClass
         
         # 设置接口轮询
         if gatewayModule.gatewayQryEnabled:
@@ -121,7 +125,12 @@ class MainEngine(object):
         
         if gateway:
             gateway.subscribe(subscribeReq)
-  
+
+    # ----------------------------------------------------------------------
+    def getOnlineHistoryData(self, symbol, size, frequence="1min"):
+        return self.defaultGateWay.getOnlineHistoryData(symbol, size, frequence)
+
+
     #----------------------------------------------------------------------
     def sendOrder(self, orderReq, gatewayName):
         """对特定接口发单"""

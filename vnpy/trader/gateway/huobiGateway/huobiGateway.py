@@ -159,6 +159,11 @@ class HuobiGateway(VtGateway):
         """设置是否要启动循环查询"""
         self.qryEnabled = qryEnabled
 
+    # ----------------------------------------------------------------------
+    def getOnlineHistoryData(self, symbol, size, frequence):
+        """获取历史bar数据"""
+        return self.dataApi.getKline(symbol,frequence,size)
+
 
 ########################################################################
 class HuobiDataApi(DataApi):
@@ -319,6 +324,7 @@ class HuobiDataApi(DataApi):
         if tick.bidPrice1:
             newtick = copy(tick)
             self.gateway.onTick(newtick)
+
 
 
 ########################################################################
@@ -718,3 +724,4 @@ class HuobiTradeApi(TradeApi):
     def onBatchCancel(self, data, reqid):
         """批量撤单回调"""
         print(reqid, data)
+

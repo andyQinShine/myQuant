@@ -433,6 +433,12 @@ class CtaEngine(AppEngine):
             self.mainEngine.subscribe(req, contract.gatewayName)
         else:
             self.writeCtaLog(u'%s的交易合约%s无法找到' %(strategy.name, strategy.vtSymbol))
+            # 添加2019/1/17日 出来为从硬盘上面加载到contract对象
+            req = VtSubscribeReq()
+            req.symbol = strategy.vtSymbol
+
+            gatewayName = self.mainEngine.gatewayDetailList[0]['gatewayName']
+            self.mainEngine.subscribe(req, gatewayName)
 
     #----------------------------------------------------------------------
     def initStrategy(self, name):
@@ -481,7 +487,9 @@ class CtaEngine(AppEngine):
                 # 对该策略发出的所有本地停止单撤单
                 for stopOrderID, so in self.workingStopOrderDict.items():
                     if so.strategy is strategy:
-                        self.cancelStopOrder(stopOrderID)   
+                        self.cancelStopOrder(stopOrderID)
+
+            del self.strategyDict[name]
         else:
             self.writeCtaLog(u'策略实例不存在：%s' %name)    
             
