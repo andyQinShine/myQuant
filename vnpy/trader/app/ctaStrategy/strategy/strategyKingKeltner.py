@@ -90,6 +90,10 @@ class KkStrategy(CtaTemplate):
         #     initData = self.loadBar(self.initDays)
 
         initData = self.loadBar(self.initDays)
+        if len(initData) == 0:
+            # 加载数据online
+            self.writeCtaLog(u"从online加载历史数据")
+            initData = self.ctaEngine.mainEngine.getOnlineHistoryData(symbol = self.vtSymbol, size = self.initDataSize, frequence="1min")
         for bar in initData:
             self.onBar(bar)
         self.putEvent()

@@ -127,8 +127,8 @@ class MainEngine(object):
             gateway.subscribe(subscribeReq)
 
     # ----------------------------------------------------------------------
-    def getOnlineHistoryData(self, symbol, size, frequence="1min"):
-        return self.defaultGateWay.getOnlineHistoryData(symbol, size, frequence)
+    def getOnlineHistoryData(self, symbol, size, frequence):
+        return self.defaultGateWay.getOnlineHistoryBar(symbol, size, frequence)
 
 
     #----------------------------------------------------------------------

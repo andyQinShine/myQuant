@@ -9,6 +9,7 @@ import json
 from datetime import datetime, timedelta
 from copy import copy
 from math import pow
+import pandas as pd
 
 from vnpy.api.huobi import TradeApi, DataApi
 from vnpy.trader.vtGateway import *
@@ -160,9 +161,37 @@ class HuobiGateway(VtGateway):
         self.qryEnabled = qryEnabled
 
     # ----------------------------------------------------------------------
-    def getOnlineHistoryData(self, symbol, size, frequence):
+    def getOnlineHistoryBar(self, symbol, size=150, frequence="1min"):
         """获取历史bar数据"""
-        return self.dataApi.getKline(symbol,frequence,size)
+        dataArrays = []
+        response = self.tradeApi.getKline(symbol,frequence,size)
+        if response != None:
+            data = response['data']
+            # 将json数据转换为DataFrame
+            pdDataFrame = pd.DataFrame(data)
+            # 按照时间升序排列
+            pdDataFrame = pdDataFrame.sort_values(by=['id'])
+            for index, row in pdDataFrame.iterrows():
+                bar = VtBarData()
+                bar.symbol = symbol
+                bar.open = float(row['open'])
+                bar.close = float(row['close'])
+                bar.high = float(row['high'])
+                bar.low = float(row['low'])
+                bar.volume = float(row['vol'])
+                timestemp = time.localtime(int(row['id']))
+
+                date = time.strftime("%Y%m%d %H:%M:%S", timestemp)
+                date_time = datetime.strptime(date, "%Y%m%d %H:%M:%S")
+
+                bar.date = date_time.strftime('%Y%m%d')
+                bar.time = date_time.strftime('%H:%M:%S')
+                bar.datetime = datetime.strptime(bar.date + ' ' + bar.time, '%Y%m%d %H:%M:%S')
+
+                dataArrays.append(bar)
+
+        return dataArrays
+
 
 
 ########################################################################
@@ -368,9 +397,6 @@ class HuobiTradeApi(TradeApi):
             self.gateway.tdConnected = True
             self.start()
             self.writeLog(u'交易服务器连接成功')
-
-            self.getTimestamp()
-            self.getSymbols()
 
     #----------------------------------------------------------------------
     def qryPosition(self):

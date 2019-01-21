@@ -269,7 +269,7 @@ class CtaEngine(AppEngine):
         self.processStopOrder(tick)
         
         # 推送tick到对应的策略实例进行处理
-        if tick.vtSymbol in self.tickStrategyDict:
+        if tick.symbol in self.tickStrategyDict:
             # tick时间可能出现异常数据，使用try...except实现捕捉和过滤
             try:
                 # 添加datetime字段
@@ -280,7 +280,7 @@ class CtaEngine(AppEngine):
                 return
                 
             # 逐个推送到策略实例中
-            l = self.tickStrategyDict[tick.vtSymbol]
+            l = self.tickStrategyDict[tick.symbol]
             for strategy in l:
                 if strategy.inited:
                     self.callStrategyFunc(strategy, strategy.onTick, tick)
