@@ -217,7 +217,7 @@ class CtaEngine(AppEngine):
     #----------------------------------------------------------------------
     def processStopOrder(self, tick):
         """收到行情后处理本地停止单（检查是否要立即发出）"""
-        vtSymbol = tick.vtSymbol
+        vtSymbol = tick.symbol
         
         # 首先检查是否有策略交易该合约
         if vtSymbol in self.tickStrategyDict:
@@ -244,6 +244,8 @@ class CtaEngine(AppEngine):
                         # 发出市价委托
                         vtOrderID = self.sendOrder(so.vtSymbol, so.orderType, 
                                                    price, so.volume, so.strategy)
+                        content = u'发出订单，' + so.vtSymbol + ', price:' + price
+                        self.writeCtaLog(content)
                         
                         # 检查因为风控流控等原因导致的委托失败（无委托号）
                         if vtOrderID:

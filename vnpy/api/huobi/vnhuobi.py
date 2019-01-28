@@ -89,7 +89,7 @@ class TradeApi(object):
         else:
             self.hostname = HADAX_API_HOST
         self.hosturl = 'https://%s' %self.hostname
-            
+
         self.accessKey = accessKey
         self.secretKey = secretKey
         
@@ -195,7 +195,9 @@ class TradeApi(object):
         # 同步模式
         else:
             return func(path, params)
-    
+
+    def addSyncReq(self,path, params, func):
+        return func(path, params)
     #----------------------------------------------------------------------
     def processReq(self, req):
         """处理请求"""
@@ -224,7 +226,99 @@ class TradeApi(object):
             except Queue.Empty:
                 pass
     
+    #----------------------------------------------------------------------
+    def getSymbols(self):
+        """查询合约代码"""
+        if self.hostname == HUOBI_API_HOST:
+            path = '/v1/common/symbols'
+        else:
+            path = '/v1/hadax/common/symbols'
 
+        params = {}
+        func = self.apiGet
+        callback = self.onGetSymbols
+
+        return self.addSyncReq(path, params, func)
+
+    #----------------------------------------------------------------------
+    def getCurrencys(self):
+        """查询支持货币"""
+        if self.hostname == HUOBI_API_HOST:
+            path = '/v1/common/currencys'
+        else:
+            path = '/v1/hadax/common/currencys'
+
+        params = {}
+        func = self.apiGet
+        callback = self.onGetCurrencys
+
+        return self.addSyncReq(path, params, func)
+
+    # ----------------------------------------------------------------------
+    # 获取KLine
+    def getKline(self, symbol, period, size=150):
+        """
+        :param symbol
+        :param period: 可选值：{1min, 5min, 15min, 30min, 60min, 1day, 1mon, 1week, 1year }
+        :param size: 可选值： [1,2000]
+        :return:
+        """
+        params = {'symbol': symbol,
+                  'period': period,
+                  'size': size}
+        path = '/market/history/kline'
+        func = self.apiGet
+
+        success, data = self.addSyncReq(path, params, func)
+        return data
+
+
+    def onGetKLine(self, data, reqid):
+        print(reqid, data)
+
+    # 得到交易对的价格和数量精度
+    def get_symbol_precision(self,base, quote):
+        precision = self.get_symbols()
+        precision = precision['data']
+        price = 0
+        amount = 0
+        for item in precision:
+            if item['base-currency'] == base and item['quote-currency'] == quote:
+                result = item
+                price = item['price-precision']
+                amount = item['amount-precision']
+                break
+        return price,amount
+
+    # 获取  支持的交易对
+    def get_symbols(self, long_polling=None):
+        """
+        """
+        params = {}
+        if long_polling:
+            params['long-polling'] = long_polling
+        path = '/v1/common/symbols'
+        func = self.apiGet
+
+        success, data = self.addReq(path, params, func, self.onGetKLine)
+        if success:
+            return data
+        else:
+            return None
+
+    # ----------------------------------------------------------------------
+    # 获取merged 获取聚合行情(Ticker)
+    def getMerged(self, symbol):
+        params = {
+            'symbol': symbol
+        }
+        path = '/market/detail/merged'
+        func = self.apiGet
+
+        return self.addReq(path, params, func, self.onGetMerged)
+
+    def onGetMerged(self, data, reqid):
+        print(reqid, data)
     #----------------------------------------------------------------------
     def getTimestamp(self):
         """查询系统时间"""
@@ -636,96 +730,3 @@ class DataApi(object):
     def onMarketDetail(self, data):
         """市场细节推送"""
         print(data)
-
-    # ----------------------------------------------------------------------
-    def getSymbols(self):
-        """查询合约代码"""
-        if self.hostname == HUOBI_API_HOST:
-            path = '/v1/common/symbols'
-        else:
-            path = '/v1/hadax/common/symbols'
-
-        params = {}
-        func = self.apiGet
-        callback = self.onGetSymbols
-
-        return self.addReq(path, params, func, callback)
-
-    # ----------------------------------------------------------------------
-    def getCurrencys(self):
-        """查询支持货币"""
-        if self.hostname == HUOBI_API_HOST:
-            path = '/v1/common/currencys'
-        else:
-            path = '/v1/hadax/common/currencys'
-
-        params = {}
-        func = self.apiGet
-        callback = self.onGetCurrencys
-
-        return self.addReq(path, params, func, callback)
-
-    # ----------------------------------------------------------------------
-    # 获取KLine
-    def getKline(self, symbol, period, size=150):
-        """
-        :param symbol
-        :param period: 可选值：{1min, 5min, 15min, 30min, 60min, 1day, 1mon, 1week, 1year }
-        :param size: 可选值： [1,2000]
-        :return:
-        """
-        params = {'symbol': symbol,
-                  'period': period,
-                  'size': size}
-        path = '/market/history/kline'
-        func = self.apiGet
-
-        success, data = self.addReq(path, params, func, self.onGetKLine)
-        return data
-
-    def onGetKLine(self, data, reqid):
-        print(reqid, data)
-
-    # 得到交易对的价格和数量精度
-    def get_symbol_precision(self, base, quote):
-        precision = self.get_symbols()
-        precision = precision['data']
-        price = 0
-        amount = 0
-        for item in precision:
-            if item['base-currency'] == base and item['quote-currency'] == quote:
-                result = item
-                price = item['price-precision']
-                amount = item['amount-precision']
-                break
-        return price, amount
-
-    # 获取  支持的交易对
-    def get_symbols(self, long_polling=None):
-        """
-        """
-        params = {}
-        if long_polling:
-            params['long-polling'] = long_polling
-        path = '/v1/common/symbols'
-        func = self.apiGet
-
-        success, data = self.addReq(path, params, func, self.onGetKLine)
-        if success:
-            return data
-        else:
-            return None
-
-    # ----------------------------------------------------------------------
-    # 获取merged 获取聚合行情(Ticker)
-    def getMerged(self, symbol):
-        params = {
-            'symbol': symbol
-        }
-        path = '/market/detail/merged'
-        func = self.apiGet
-
-        return self.addReq(path, params, func, self.onGetMerged)
-
-    def onGetMerged(self, data, reqid):
-        print(reqid, data)

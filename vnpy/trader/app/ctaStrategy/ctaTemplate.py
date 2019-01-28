@@ -103,28 +103,28 @@ class CtaTemplate(object):
     def buy(self, price, volume, stop=False):
         """买开"""
         constant = u'创建买开订单，price is ' + str(price) + ', stop is ' + str(stop)
-        self.ctaEngine.addCtaLog(constant)
+        self.ctaEngine.writeCtaLog(constant)
         return self.sendOrder(CTAORDER_BUY, price, volume, stop)
     
     #----------------------------------------------------------------------
     def sell(self, price, volume, stop=False):
         """卖平"""
         constant = u'创建卖平订单，price is ' + str(price) + ', stop is ' + str(stop)
-        self.ctaEngine.addCtaLog(constant)
+        self.ctaEngine.writeCtaLog(constant)
         return self.sendOrder(CTAORDER_SELL, price, volume, stop)       
 
     #----------------------------------------------------------------------
     def short(self, price, volume, stop=False):
         """卖开"""
         constant = u'创建卖开订单，price is ' + str(price) + ', stop is ' + str(stop)
-        self.ctaEngine.addCtaLog(constant)
+        self.ctaEngine.writeCtaLog(constant)
         return self.sendOrder(CTAORDER_SHORT, price, volume, stop)          
  
     #----------------------------------------------------------------------
     def cover(self, price, volume, stop=False):
         """买平"""
         constant = u'创建买平订单，price is ' + str(price) + ', stop is ' + str(stop)
-        self.ctaEngine.addCtaLog(constant)
+        self.ctaEngine.writeCtaLog(constant)
         return self.sendOrder(CTAORDER_COVER, price, volume, stop)
         
     #----------------------------------------------------------------------
@@ -188,7 +188,7 @@ class CtaTemplate(object):
     def addCtaLog(self, content):
         """记录CTA日志"""
         content = self.name + ':' + content
-        self.ctaEngine.addCtaLog(content)
+        # self.ctaEngine.addCtaLog(content)
         
     #----------------------------------------------------------------------
     def putEvent(self):

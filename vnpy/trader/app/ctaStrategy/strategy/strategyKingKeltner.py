@@ -93,7 +93,7 @@ class KkStrategy(CtaTemplate):
         if len(initData) == 0:
             # 加载数据online
             self.writeCtaLog(u"从online加载历史数据")
-            initData = self.ctaEngine.mainEngine.getOnlineHistoryData(symbol = self.vtSymbol, size = self.initDataSize, frequence="1min")
+            initData = self.ctaEngine.mainEngine.getOnlineHistoryData(self.vtSymbol, self.initDataSize * 2, "1min")
         for bar in initData:
             self.onBar(bar)
         self.putEvent()
@@ -130,7 +130,7 @@ class KkStrategy(CtaTemplate):
             self.cancelOrder(orderID)
             '''记录日志'''
             content = u'撤销所有为成交的订单，订单ID是：' + orderID
-            self.ctaEngine.addCtaLog(content)
+            self.ctaEngine.writeCtaLog(content)
         self.orderList = []
     
         # 保存K线数据
