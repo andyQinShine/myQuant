@@ -91,8 +91,7 @@ class HuobiGateway(VtGateway):
     #----------------------------------------------------------------------
     def subscribe(self, subscribeReq):
         """订阅行情"""
-        pass
-        #self.dataApi.subscribe(subscribeReq)
+        self.dataApi.subscribe(subscribeReq)
 
     #----------------------------------------------------------------------
     def sendOrder(self, orderReq):
@@ -395,6 +394,7 @@ class HuobiTradeApi(TradeApi):
 
             self.connectionStatus = self.init(exchange, accessKey, secretKey)
             self.gateway.tdConnected = True
+            self.getSymbols()
             self.start()
             self.writeLog(u'交易服务器连接成功')
 
