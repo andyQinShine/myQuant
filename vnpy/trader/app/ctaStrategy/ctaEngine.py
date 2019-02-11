@@ -244,7 +244,7 @@ class CtaEngine(AppEngine):
                         # 发出市价委托
                         vtOrderID = self.sendOrder(so.vtSymbol, so.orderType, 
                                                    price, so.volume, so.strategy)
-                        content = u'发出订单，' + so.vtSymbol + ', price:' + price
+                        content = u'发出订单，' + so.vtSymbol + ', price:' + str(price)
                         self.writeCtaLog(content)
                         
                         # 检查因为风控流控等原因导致的委托失败（无委托号）
