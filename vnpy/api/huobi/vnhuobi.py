@@ -238,7 +238,7 @@ class TradeApi(object):
         func = self.apiGet
         callback = self.onGetSymbols
 
-        return self.addReq(path, params, func,callback)
+        return self.addReq(path, params, func, callback)
 
     #----------------------------------------------------------------------
     def getCurrencys(self):
