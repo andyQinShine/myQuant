@@ -430,8 +430,20 @@ class HuobiTradeApi(TradeApi):
                 for req in self.localOrderReq:
                     orderReq = self.localOrderReq[req]
                     dataStr ='data:[{' \
-                              '"id": "+datetime.utcnow()+",' \
-                                                       '"symbol":"'+orderReq.symbol+'","account-id":'+self.accountid+',}]';
+                              '"id": '+datetime.utcnow()+',' \
+                               '"symbol":"'+orderReq.symbol+'","account-id":'+self.accountid+',' \
+                                '"amount":'+orderReq.volume+',' \
+                                '"price" : '+orderReq.price+',' \
+                                '"created-at": '+datetime.utcnow()+',' \
+                                '"type":"'+orderReq.type_+'",' \
+                                '"field-amount": "'+orderReq.volume+'",' \
+                                '"field-cash-amount" : "'+orderReq.price * orderReq.volume+'",' \
+                                '"field-fees" : "'+orderReq.price * orderReq.volume * 0.02+'",' \
+                                '"source": "api",' \
+                                '"state": "filled","canceled-at": 0,"exchange": "huobi", "batch": ""}]';
+                    data = json.loads(dataStr)
+
+                    self.onGetOrders(data, None)
 
                     """data": [
                 {
@@ -493,6 +505,7 @@ class HuobiTradeApi(TradeApi):
         self.reqLocalDict[reqid] = localid
 
         if self.testModel:
+            orderReq.type_ = type_
             self.localOrderReq[reqid] = orderReq
 
         # 返回订单号
