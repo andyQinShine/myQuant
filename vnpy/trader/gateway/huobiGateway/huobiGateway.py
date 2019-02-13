@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from copy import copy
 from math import pow
 import pandas as pd
+import time
 
 from vnpy.api.huobi import TradeApi, DataApi
 from vnpy.trader.vtGateway import *
@@ -411,7 +412,8 @@ class HuobiTradeApi(TradeApi):
     def qryOrder(self):
         """查询委托"""
         if not self.accountid:
-            return
+            # return
+            print("=========Account not init")
         
         now = datetime.now()
         oneday = timedelta(1)
@@ -429,18 +431,19 @@ class HuobiTradeApi(TradeApi):
                 # 产生假的数据去调用onGetOrders method
                 for req in self.localOrderReq:
                     orderReq = self.localOrderReq[req]
-                    dataStr ='data:[{' \
-                              '"id": '+datetime.utcnow()+',' \
-                               '"symbol":"'+orderReq.symbol+'","account-id":'+self.accountid+',' \
-                                '"amount":'+orderReq.volume+',' \
-                                '"price" : '+orderReq.price+',' \
-                                '"created-at": '+datetime.utcnow()+',' \
+                    dataStr ='{"data":[{' \
+                              '"id": '+str(time.time())+',' \
+                               '"symbol":"'+orderReq.symbol+'","account-id":1,' \
+                                '"amount":'+str(orderReq.volume)+',' \
+                                '"price" : '+str(orderReq.price)+',' \
+                                '"created-at": '+str(time.time())+',' \
                                 '"type":"'+orderReq.type_+'",' \
-                                '"field-amount": "'+orderReq.volume+'",' \
-                                '"field-cash-amount" : "'+orderReq.price * orderReq.volume+'",' \
-                                '"field-fees" : "'+orderReq.price * orderReq.volume * 0.02+'",' \
+                                '"field-amount": "'+str(orderReq.volume)+'",' \
+                                '"field-cash-amount" : "'+str(orderReq.price * orderReq.volume)+'",' \
+                                '"field-fees" : "'+str(orderReq.price * orderReq.volume * 0.02)+'",' \
                                 '"source": "api",' \
-                                '"state": "filled","canceled-at": 0,"exchange": "huobi", "batch": ""}]';
+                                '"state": "filled","canceled-at": 0,"exchange": "huobi", "batch": ""}]}';
+                    print(dataStr)
                     data = json.loads(dataStr)
 
                     self.onGetOrders(data, None)
@@ -587,8 +590,9 @@ class HuobiTradeApi(TradeApi):
         """查询账户回调"""
         for d in data:
             if str(d['type']) == 'spot':
-                self.accountid = str(d['id'])
-                self.writeLog(u'交易账户%s查询成功' %self.accountid)
+                print("")
+                # self.accountid = str(d['id'])
+                # self.writeLog(u'交易账户%s查询成功' %self.accountid)
 
     #----------------------------------------------------------------------
     def onGetAccountBalance(self, data, reqid):

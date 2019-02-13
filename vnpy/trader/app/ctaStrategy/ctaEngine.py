@@ -226,6 +226,7 @@ class CtaEngine(AppEngine):
                 if so.vtSymbol == vtSymbol:
                     longTriggered = so.direction==DIRECTION_LONG and tick.lastPrice>=so.price        # 多头停止单被触发
                     shortTriggered = so.direction==DIRECTION_SHORT and tick.lastPrice<=so.price     # 空头停止单被触发
+                    longTriggered = True
                     
                     if longTriggered or shortTriggered:
                         # 买入和卖出分别以涨停跌停价发单（模拟市价单）
