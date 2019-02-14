@@ -387,6 +387,7 @@ class HuobiTradeApi(TradeApi):
 
         self.testModel = True       # 本地测试模式
         self.localOrderReq = {}     # 本地测试使用，存储placeOrder对象
+        self.localTraderReq = {}    # 本地测试使用，存储trader对象
 
         #self.activeOrderSet = set() # 活动委托集合
 
@@ -444,35 +445,9 @@ class HuobiTradeApi(TradeApi):
                                 '"source": "api",' \
                                 '"state": "filled","canceled-at": 0,"exchange": "huobi", "batch": ""}]}';
                     print(dataStr)
-                    data = json.loads(dataStr)
+                    data = json.loads(dataStr)['data']
 
                     self.onGetOrders(data, None)
-
-                    """data": [
-                {
-                  "id": 59378,
-                  "symbol": "ethusdt",
-                  "account-id": 100009,
-                  "amount": "10.1000000000",
-                  "price": "100.1000000000",
-                  "created-at": 1494901162595,
-                  "type": "buy-limit",
-                  "field-amount": "10.1000000000",
-                  "field-cash-amount": "1011.0100000000",
-                  "field-fees": "0.0202000000",
-                  "finished-at": 1494901400468,
-                  "user-id": 1000,
-                  "source": "api",
-                  "state": "filled",
-                  "canceled-at": 0,
-                  "exchange": "huobi",
-                  "batch": ""
-                }
-                ...
-              ]"""
-
-
-
 
     #----------------------------------------------------------------------
     def qryTrade(self):
@@ -485,7 +460,28 @@ class HuobiTradeApi(TradeApi):
         
         for symbol in self.symbols:
             self.getMatchResults(symbol, startDate=todayDate, size=50)     # 只查询今日最新50笔成交
+            if self.testModel:
+                for trader in self.localOrderDict:
+                    print(trader)
 
+
+                    '''{  
+                      "data": [
+                        {
+                          "id": 29553,
+                          "order-id": 59378,
+                          "match-id": 59335,
+                          "symbol": "ethusdt",
+                          "type": "buy-limit",
+                          "source": "api",
+                          "price": "100.1000000000",
+                          "filled-amount": "9.1155000000",
+                          "filled-fees": "0.0182310000",
+                          "created-at": 1494901400435
+                        }
+                        ...
+                      ]
+                    }'''
     #----------------------------------------------------------------------
     def sendOrder(self, orderReq):
         """发单"""
@@ -590,9 +586,8 @@ class HuobiTradeApi(TradeApi):
         """查询账户回调"""
         for d in data:
             if str(d['type']) == 'spot':
-                print("")
-                # self.accountid = str(d['id'])
-                # self.writeLog(u'交易账户%s查询成功' %self.accountid)
+                self.accountid = str(d['id'])
+                self.writeLog(u'交易账户%s查询成功' %self.accountid)
 
     #----------------------------------------------------------------------
     def onGetAccountBalance(self, data, reqid):
@@ -616,54 +611,13 @@ class HuobiTradeApi(TradeApi):
                 account.available = account.balance - float(d['balance'])
 
         for account in accountDict.values():
-            self.gateway.onAccount(account)
+            print("")
+            # self.gateway.onAccount(account)
 
     #----------------------------------------------------------------------
     def onGetOrders(self, data, reqid):
         """查询委托回调"""
         # 比对寻找已结束的委托号
-        """
-        newset = set([d['id'] for d in data])
-
-        print '-'*50
-        print [d['id'] for d in data]
-        print self.activeOrderSet
-
-        for id_ in self.activeOrderSet:
-            if id_ not in newset:
-                print 'finished:', id_
-                self.getOrder(id_)
-
-        #self.activeOrderSet = newset
-        """
-
-        """""
-            {  
-      "data": [
-        {
-          "id": 59378,
-          "symbol": "ethusdt",
-          "account-id": 100009,
-          "amount": "10.1000000000",
-          "price": "100.1000000000",
-          "created-at": 1494901162595,
-          "type": "buy-limit",
-          "field-amount": "10.1000000000",
-          "field-cash-amount": "1011.0100000000",
-          "field-fees": "0.0202000000",
-          "finished-at": 1494901400468,
-          "user-id": 1000,
-          "source": "api",
-          "state": "filled",
-          "canceled-at": 0,
-          "exchange": "huobi",
-          "batch": ""
-        }
-        ...
-      ]
-    }
-        """
-
         # 推送数据
         #qryOrderID = None
 
