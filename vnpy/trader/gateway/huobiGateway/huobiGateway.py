@@ -92,7 +92,7 @@ class HuobiGateway(VtGateway):
     #----------------------------------------------------------------------
     def subscribe(self, subscribeReq):
         """订阅行情"""
-        self.dataApi.subscribe(subscribeReq)
+        self.dataApi.subscribe(subscribeReq.symbol)
 
     #----------------------------------------------------------------------
     def sendOrder(self, orderReq):
@@ -228,8 +228,8 @@ class HuobiDataApi(DataApi):
         if self.connectionStatus:
             self.writeLog(u'行情服务器连接成功')
             
-            for symbol in self.symbols:
-                self.subscribe(symbol)
+            # for symbol in self.symbols:
+            #     self.subscribe(symbol)
             # 订阅所有之前订阅过的行情
             #for req in self.subscribeDict.values():
             #    self.subscribe(req)
@@ -446,8 +446,8 @@ class HuobiTradeApi(TradeApi):
                                 '"state": "filled","canceled-at": 0,"exchange": "huobi", "batch": ""}]}';
                     print(dataStr)
                     data = json.loads(dataStr)['data']
-
                     self.onGetOrders(data, None)
+                self.localOrderDict.clear()
 
     #----------------------------------------------------------------------
     def qryTrade(self):
@@ -461,27 +461,42 @@ class HuobiTradeApi(TradeApi):
         for symbol in self.symbols:
             self.getMatchResults(symbol, startDate=todayDate, size=50)     # 只查询今日最新50笔成交
             if self.testModel:
-                for trader in self.localOrderDict:
-                    print(trader)
+                for orderId in self.localTraderReq:
+                    order = self.localTraderReq[orderId]
+                    tradStr = '{"data" : [{' \
+                              '"id" : '+str(orderId)+',' \
+                              '"order-id" : '+str(orderId)+',' \
+                              '"match-id" : '+str(orderId)+',' \
+                              '"symbol" : "'+order.symbol+'", ' \
+                              '"type" : "'+order.originType+'",' \
+                              '"source" : "api",' \
+                               '"price" : "'+str(order.price)+'",' \
+                                '"filled-amount" : "'+str(order.price * order.tradedVolume)+'",' \
+                                '"filled-fees" : "'+str(order.price * order.tradedVolume * 0.002)+'",' \
+                                '"created-at": '+str(int(time.time()))+'}]}'
+                    print(tradStr)
 
+                    tradeObj = json.loads(tradStr)['data']
 
-                    '''{  
-                      "data": [
-                        {
-                          "id": 29553,
-                          "order-id": 59378,
-                          "match-id": 59335,
-                          "symbol": "ethusdt",
-                          "type": "buy-limit",
-                          "source": "api",
-                          "price": "100.1000000000",
-                          "filled-amount": "9.1155000000",
-                          "filled-fees": "0.0182310000",
-                          "created-at": 1494901400435
-                        }
-                        ...
-                      ]
-                    }'''
+                    self.onGetMatchResults(tradeObj, None)
+                self.localTraderReq.clear()
+                '''{  
+                  "data": [
+                    {
+                      "id": 29553,
+                      "order-id": 59378,
+                      "match-id": 59335,
+                      "symbol": "ethusdt",
+                      "type": "buy-limit",
+                      "source": "api",
+                      "price": "100.1000000000",
+                      "filled-amount": "9.1155000000",
+                      "filled-fees": "0.0182310000",
+                      "created-at": 1494901400435
+                    }
+                    ...
+                  ]
+                }'''
     #----------------------------------------------------------------------
     def sendOrder(self, orderReq):
         """发单"""
@@ -549,22 +564,23 @@ class HuobiTradeApi(TradeApi):
         """查询代码回调"""
         for d in data:
             d_symbol = d['base-currency'] + d['quote-currency']
-            for symbol in self.symbols:
-                if symbol == d_symbol:
+            contract = VtContractData()
+            contract.gatewayName = self.gatewayName
 
-                    contract = VtContractData()
-                    contract.gatewayName = self.gatewayName
+            contract.symbol = d_symbol
+            contract.exchange = EXCHANGE_HUOBI
+            contract.vtSymbol = '.'.join([contract.symbol, contract.exchange])
 
-                    contract.symbol = d_symbol
-                    contract.exchange = EXCHANGE_HUOBI
-                    contract.vtSymbol = '.'.join([contract.symbol, contract.exchange])
+            contract.name = '/'.join([d['base-currency'].upper(), d['quote-currency'].upper()])
+            contract.priceTick = 1 / pow(10, d['price-precision'])
+            contract.size = 1 / pow(10, d['amount-precision'])
+            contract.productClass = PRODUCT_SPOT
 
-                    contract.name = '/'.join([d['base-currency'].upper(), d['quote-currency'].upper()])
-                    contract.priceTick = 1 / pow(10, d['price-precision'])
-                    contract.size = 1 / pow(10, d['amount-precision'])
-                    contract.productClass = PRODUCT_SPOT
+            self.gateway.onContract(contract)
+            # for symbol in self.symbols:
+            #     if symbol == d_symbol:
 
-                    self.gateway.onContract(contract)
+
 
         self.writeLog(u'交易代码查询成功')
         self.getAccounts()
@@ -683,6 +699,10 @@ class HuobiTradeApi(TradeApi):
             if updated:
                 self.gateway.onOrder(order)
 
+            if self.testModel:
+                order.originType = d['type']
+                self.localTraderReq[orderID] = order
+
             ## 计算查询下标（即最早的未全成或撤委托）
             #if order.status not in [STATUS_ALLTRADED, STATUS_CANCELLED]:
                 #if not qryOrderID:
@@ -693,6 +713,7 @@ class HuobiTradeApi(TradeApi):
         ## 更新查询下标
         #if qryOrderID:
             #self.qryOrderID = qryOrderID
+
 
     #----------------------------------------------------------------------
     def onGetMatchResults(self, data, reqid):
