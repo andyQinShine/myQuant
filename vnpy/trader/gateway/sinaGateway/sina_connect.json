@@ -1,0 +1,6 @@
+{
+	"exchange": "sina",
+	"symbols": ["sz002326"],
+	"proxyHost": "127.0.0.1",
+	"proxyPort": 1080
+}
