@@ -7,11 +7,11 @@ import requests
 
 class DataApi(object):
 
-    def __init__(self):
+    def __init__(self, active = False):
         self.url = 'http://hq.sinajs.cn/list'
 
         self.reqid = 0
-        self.active = False
+        self.active = active
         self.subThread = Thread(target=self.run)
         self.subSymbols = {}
 
@@ -52,6 +52,7 @@ class DataApi(object):
 
     def subStocks(self, symbols):
         for symbol in symbols:
+            symbol = str(symbol)
             if self.subSymbols.has_key(symbol) == False:
                 self.subSymbols[symbol] = None
         self.subThread.run()
@@ -63,4 +64,4 @@ class DataApi(object):
 if __name__ == '__main__':
     dataApi = DataApi()
     dataApi.active = True
-    dataApi.subStocks(['sh601003','sh601001'])
+    dataApi.subStocks(['sz002326'])
