@@ -913,9 +913,10 @@ new Vue({
         },
         gGateway() {
             const that = this;
+            debugger;
             axios.post(host + '/gateway', {
                     token: this.config.token,
-                    gatewayName: 'HUOBI'
+                    gatewayName: 'SINA'
                 })
                 .then(function(res) {
                     that.config.gateway = true;
@@ -930,6 +931,7 @@ new Vue({
                 tick = new Object(),
                 tickObj = new Object();
             socket.on("eTick.", function(data) {
+                console.log(data)
                 tick[data.vtSymbol] = data
                 that.tickObj = tick
                 that.eTick = Object.values(tick).reverse()

@@ -5,18 +5,19 @@ from vnpy.api.sina.vnsina import DataApi
 from vnpy.trader.vtFunction import getJsonPath
 import json
 import time
+from datetime import datetime
 
 class SinaGateway(VtGateway):
     def __init__(self, eventEnginer, gatewayName='SINA'):
-        super(SinaGateway, self).__init__(eventEngine, gatewayName)
-        self.dataApi = SinaDataApi()
+        super(SinaGateway, self).__init__(eventEnginer, gatewayName)
+        self.dataApi = SinaDataApi(self)
         self.gatewayName = gatewayName
 
         self.fileName = self.gatewayName + '_connect.json'
         self.filePath = getJsonPath(self.fileName, __file__)
 
 
-    def connection(self):
+    def connect(self):
         try:
             f = open(self.filePath)
         except IOError:
@@ -41,10 +42,15 @@ class SinaGateway(VtGateway):
         # 订阅对应的股票信息
         self.dataApi.subStocks(symbols)
 
+    def getOnlineHistoryBar(self, symbol, size=150, frequence="1min"):
+        dataArrays = []
+
+        return dataArrays
 
 class SinaDataApi(DataApi):
-    def __init__(self):
+    def __init__(self, gateway):
         super(SinaDataApi,self).__init__(True)
+        self.gateway = gateway
 
     def onTickData(self):
         print "override on tick data"
@@ -103,9 +109,11 @@ class SinaDataApi(DataApi):
             tick.askPrice5 = float(data[28])
 
 
-            tick.date = data[29]
-            tick.time = data[30]
+            tick.date = str(data[29])
+            tick.time = str(data[30])
+            tick.datetime = datetime.strptime(tick.date + " " +  tick.time,"%Y-%m-%d %H:%M:%S")
 
+            self.gateway.onTick(tick)
 
             print (tick.__dict__)
 

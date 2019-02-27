@@ -18,6 +18,7 @@ from vnpy.trader.vtEngine import MainEngine, LogEngine
 # 加载底层接口
 from vnpy.trader.gateway import ctpGateway
 from vnpy.trader.gateway import huobiGateway
+from vnpy.trader.gateway import sinaGateway
 
 # 加载上层应用
 from vnpy.trader.app import ctaStrategy, rpcService
@@ -50,8 +51,8 @@ def main():
         signal.signal(sig, shutdown)
     
     # 添加交易接口
-    me.addGateway(huobiGateway)
-    
+    # me.addGateway(huobiGateway)
+    me.addGateway(sinaGateway)
     # 添加上层应用
     me.addApp(ctaStrategy)
     me.addApp(rpcService)

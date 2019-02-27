@@ -1,8 +1,14 @@
 [
 
+//    {
+//        "name": "king keltner",
+//        "className": "KkStrategy",
+//        "vtSymbol": "eosbtc"
+//    },
+
     {
         "name": "king keltner",
         "className": "KkStrategy",
-        "vtSymbol": "eosbtc"
+        "vtSymbol": "sz002326"
     }
 ]

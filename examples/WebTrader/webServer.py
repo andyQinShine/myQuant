@@ -120,6 +120,7 @@ class Gateway(Resource):
             return {'result_code':'error','message':'token error'}
                 
         gatewayName = args['gatewayName']
+        gatewayName = "SINA"
         me.connect(gatewayName)
         return {'result_code':'success','data':''}
 
